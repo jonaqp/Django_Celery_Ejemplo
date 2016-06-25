@@ -107,6 +107,7 @@ def load_image():
             bucket_src.lookup(k.name)
             bucket_src.copy_key(path_dst, bucket_src.name, k.name)
             bucket_src.delete_key(k.name)
+    return str('Successfull')
 
 
 if __name__ == "__main__":

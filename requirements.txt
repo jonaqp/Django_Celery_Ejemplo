@@ -6,3 +6,4 @@ boto
 django-environ
 wand
 Pillow
+django-storages

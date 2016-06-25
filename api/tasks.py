@@ -25,10 +25,7 @@ def enviar_mail(asunto, contenido, destinatario):
 
 @shared_task()
 def fetch_url():
-    hello()
     scraper_example()
-
-
 
 
 def scraper_example():

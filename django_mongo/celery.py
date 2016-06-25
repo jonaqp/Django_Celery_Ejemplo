@@ -13,9 +13,6 @@ app = Celery('django_mongo')
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-app.conf.update(
-    BROKER_URL='django://',
-)
 
 # @app.task(bind=True)
 # def debug_task(self):
