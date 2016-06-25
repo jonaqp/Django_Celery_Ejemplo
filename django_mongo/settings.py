@@ -55,7 +55,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'django_celery_tutorial.urls'
+ROOT_URLCONF = 'django_mongo.urls'
 
 TEMPLATES = [
     {

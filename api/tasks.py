@@ -1,4 +1,4 @@
-from django_celery_tutorial.celery import app
+from django_mongo.celery import app
 from django.core.mail import send_mail
 
 @app.task

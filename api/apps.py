@@ -4,4 +4,4 @@ from django.apps import AppConfig
 
 
 class AppMailConfig(AppConfig):
-    name = 'app_mail'
+    name = 'api'
