@@ -11,10 +11,18 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import environ
+from os.path import basename
+
+env = environ.Env()
+SETTINGS_DIR = environ.Path(__file__) - 1
+DJANGO_ROOT = environ.Path(__file__) - 2
+SETTINGS_NAME = basename(str(SETTINGS_DIR))
+PROJECT_NAME = basename(str(DJANGO_ROOT))
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -25,8 +33,7 @@ SECRET_KEY = '456#j6r+o7*p76)ek)&h2uwd3tk9g%2)^bg0ki8huh7t23dz*^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -37,11 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'djcelery',
-    'kombu.transport.django',
-    'app_mail',
-    
+    'api',
+
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -55,7 +61,9 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'django_mongo.urls'
+
+ROOT_URLCONF = '%s.urls' % SETTINGS_NAME
+
 
 TEMPLATES = [
     {
@@ -73,8 +81,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django_celery_tutorial.wsgi.application'
-
+WSGI_APPLICATION = '%s.wsgi.application' % SETTINGS_NAME
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -85,7 +92,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -105,7 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -119,17 +124,77 @@ USE_L10N = True
 
 USE_TZ = True
 
-#SMTP
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = ""
+# SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 SERVER_EMAIL = ""
-EMAIL_HOST_USER = "" 
-EMAIL_HOST_PASSWORD = ""
+EMAIL_HOST_USER = "jony327@gmail.com"
+EMAIL_HOST_PASSWORD = "Furystrikee123456789"
+EMAIL_USE_TLS = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
 
-#Celery config
-BROKER_URL = 'django://'
+# Celery config
+
+import djcelery
+djcelery.setup_loader()
+
+BROKER_URL = 'redis://localhost:6379/0'
+BROKER_TRANSPORT = 'redis'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+
+
+if BROKER_URL == "django://":
+    INSTALLED_APPS += ("kombu.transport.django",)
+
+
+MONGODB_USER = 'shellcatch_dev'
+MONGODB_PASSWD = 'shellcatch_password'
+MONGODB_HOST = 'ds025603.mlab.com:25603'
+MONGODB_NAME = 'heroku_h0vjb9cj'
+MONGODB_DATABASE_HOST = \
+    'mongodb://%s:%s@%s/%s' \
+    % (MONGODB_USER, MONGODB_PASSWD, MONGODB_HOST, MONGODB_NAME)
+
+
+STATIC_ROOT = str(DJANGO_ROOT.path('run/static'))
+MEDIA_ROOT = str(DJANGO_ROOT.path('run/media'))
+print(STATIC_ROOT)
+STATICFILES_DIRS = [
+    str(DJANGO_ROOT.path('static')),
+]
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
+AWS_STORAGE_BUCKET_NAME = 'shellcatch'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_ACCESS_KEY_ID = 'AKIAJRA5Z7OCTBF7JPNA'
+AWS_SECRET_ACCESS_KEY = '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'
+
+AWS_AUTO_CREATE_BUCKET = True
+AWS_QUERYSTRING_AUTH = False
+AWS_EXPIRY = 60 * 60 * 24 * 7
+AWS_PRELOAD_METADATA = True
+AWS_HEADERS = {
+    'Cache-Control': u'max-age={0:d}, s-maxage={1:d}, must-revalidate'.format(
+        AWS_EXPIRY, AWS_EXPIRY)
+}
+
+STATICFILES_LOCATION = 'static'
+STATIC_URL = u"https://{0:s}/{1:s}/".format(AWS_S3_CUSTOM_DOMAIN,
+                                            STATICFILES_LOCATION)
+STATICFILES_STORAGE = 'api.custom_storages.StaticStorage'
+
+MEDIAFILES_LOCATION = 'media'
+MEDIA_URL = u"https://{0:s}/{1:s}/".format(AWS_S3_CUSTOM_DOMAIN,
+                                           MEDIAFILES_LOCATION)
+DEFAULT_FILE_STORAGE = 'api.custom_storages.MediaStorage'

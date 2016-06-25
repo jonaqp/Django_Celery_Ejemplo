@@ -4,17 +4,17 @@ import os
 
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_celery_tutorial.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_mongo.settings')
 
 from django.conf import settings  # noqa
 
-app = Celery('CeleryApp')
+app = Celery('django_mongo')
 
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 app.conf.update(
-    BROKER_URL = 'django://',
+    BROKER_URL='django://',
 )
 
 # @app.task(bind=True)

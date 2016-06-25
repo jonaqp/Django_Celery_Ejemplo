@@ -1,2 +1,8 @@
 django==1.9.6
 django-celery
+django-redis
+mongoengine
+boto
+django-environ
+wand
+Pillow
