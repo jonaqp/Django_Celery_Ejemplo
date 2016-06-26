@@ -1,8 +1,16 @@
-from django.conf import settings
 from mongoengine import *
-connect(settings.MONGODB_NAME, host=settings.MONGODB_DATABASE_HOST)
-# connect('heroku_h0vjb9cj',
-#         host='mongodb://shellcatch_dev:shellcatch_password@ds025603.mlab.com:25603/heroku_h0vjb9cj')
+
+# connect(settings.MONGODB_NAME, host=settings.MONGODB_DATABASE_HOST)
+connect('heroku_h0vjb9cj',
+        host='mongodb://shellcatch_dev:shellcatch_password@ds025603.mlab.com:25603/heroku_h0vjb9cj')
+
+
+class Events(EmbeddedDocument):
+    name = StringField(max_length=50)
+    time_start = StringField(max_length=100)
+    time_end = StringField(max_length=100)
+    comments = StringField(max_length=255)
+    supervisor = StringField(max_length=100)
 
 
 class Port(EmbeddedDocument):
@@ -30,7 +38,8 @@ class Country(EmbeddedDocument):
 
 
 class Image(EmbeddedDocument):
-    image_filepath =  StringField(max_length=255)
+    time = StringField(max_length=50)
+    image_filepath = StringField(max_length=255)
     latitude = StringField(max_length=20)
     longitude = StringField(max_length=20)
     orientation = StringField(max_length=10)
@@ -43,6 +52,7 @@ class Boat(Document):
     company = EmbeddedDocumentField(Company)
     phone = EmbeddedDocumentField(Phone)
     port = EmbeddedDocumentField(Port)
+    events = EmbeddedDocumentField(Events)
 
     @staticmethod
     def create(mac_address):
@@ -55,18 +65,17 @@ class Boat(Document):
 class Trip(Document):
     mac_address = ReferenceField(Boat)
     date = StringField(max_length=50)
-    time = StringField(max_length=50)
     json_filepath = URLField()
+    video_filepath = URLField()
     image = ListField(EmbeddedDocumentField(Image))
 
     @staticmethod
-    def create(date_image, time_image, mac_address, is_new=True):
+    def create(date_image, mac_address, is_new=True):
         new_mac_address = mac_address
         if mac_address and is_new:
             new_mac_address = Boat.create(mac_address)
             trip = Trip()
             trip.date = date_image
-            trip.time = time_image
             trip.mac_address = new_mac_address
             trip.save()
             return trip
@@ -78,7 +87,6 @@ class Trip(Document):
             else:
                 trip = Trip()
                 trip.date = date_image
-                trip.time = time_image
                 trip.mac_address = new_mac_address
                 trip.save()
             return trip
