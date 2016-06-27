@@ -7,3 +7,4 @@ django-environ
 wand
 Pillow
 django-storages
+backports.csv
