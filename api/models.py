@@ -89,9 +89,9 @@ class Trip(Document):
             return trip
         elif mac_address and not is_new:
             new_boat = new_boat
-            trip = Trip.objects.filter(mac_address=new_boat, date=date_image)
+            trip = Trip.objects.filter(boat=new_boat, date=date_image)
             if trip:
-                trip = Trip.objects.get(mac_address=new_boat, date=date_image)
+                trip = Trip.objects.get(boat=new_boat, date=date_image)
             else:
                 trip = Trip()
                 trip.date = date_image

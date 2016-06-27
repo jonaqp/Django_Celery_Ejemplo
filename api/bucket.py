@@ -73,7 +73,7 @@ def create_append_image(trip_obj, picture_format, path_dst):
     time = str(picture_format['datetime'].time())
     latitude = str(picture_format['latitude'])
     longitude = str(picture_format['longitude'])
-    battery = str(picture_format['battery'])
+    battery = str(picture_format['battery']) or '0'
     image_ = Image(image_filepath=path_dst, latitude=latitude, longitude=longitude,
                    orientation='', battery_level=battery, time=time)
     trip_obj.image.append(image_)
@@ -98,17 +98,17 @@ def create_trip(picture, path_dst):
     return picture_format
 
 
-def generated_geometry(create_trip_, image_directory):
-    result_dict = dict()
+def generated_geometry(create_trip_, image_directory, result_dict, path_dst):
     date_string = str(create_trip_['datetime'].date())
     if date_string not in result_dict.keys():
-        result_dict[date_string] = dict(date='', geometry=list())
+        result_dict[date_string] = dict(date='', mac_address='', geometry=list())
     result_dict[date_string]['mac_address'] = str(image_directory.split('_')[0])
     result_dict[date_string]['date'] = date_string
     result_dict[date_string]['geometry'].append(
         dict(
             longitude=str(create_trip_['longitude']),
-            latitude=str(create_trip_['latitude'])
+            latitude=str(create_trip_['latitude']),
+            image_filepath=path_dst
         )
     )
     return result_dict
@@ -119,35 +119,34 @@ def create_json_file(data):
     bucket_src = conn.get_bucket('shellcatch')
     src = 'media/uploads/container'
 
-    for g in data:
-        for i, j in g.items():
-            date = j['date']
-            mac_address = j['mac_address']
-            geometry = j['geometry']
-            name_directory = "{0}_{1}".format(str(mac_address), str(date))
-            dst = "{0}/{1}/{2}.json".format(str(src), str(name_directory), str(name_directory))
-            url = "{0}{1}".format(AWS_S3_CUSTOM_DOMAIN, dst)
-            import urllib.request
-            try:
-                data_request = urllib.request.urlopen(url).read().decode('utf8')
-            except urllib.error.HTTPError as e:
-                data_request = ''
+    for i, j in data.items():
+        date = j['date']
+        mac_address = j['mac_address']
+        geometry = j['geometry']
+        name_directory = "{0}_{1}".format(str(mac_address), str(date))
+        dst = "{0}/{1}/{2}.json".format(str(src), str(name_directory), str(name_directory))
+        url = "{0}{1}".format(AWS_S3_CUSTOM_DOMAIN, dst)
+        import urllib.request
+        try:
+            data_request = urllib.request.urlopen(url).read().decode('utf8')
+        except urllib.error.HTTPError as e:
+            data_request = ''
 
-            if data_request:
-                d = json.loads(data_request)
-                new_data = d + geometry
-                k = bucket_src.new_key(dst)
-                k.content_type = 'application/json'
-                k.set_contents_from_string(json.dumps(new_data, indent=4))
-            else:
-                k = bucket_src.new_key(dst)
-                k.content_type = 'application/json'
-                k.set_contents_from_string(json.dumps(geometry, indent=4))
+        if data_request:
+            d = json.loads(data_request)
+            new_data = d + [geometry]
+            k = bucket_src.new_key(dst)
+            k.content_type = 'application/json'
+            k.set_contents_from_string(json.dumps(new_data, indent=4))
+        else:
+            k = bucket_src.new_key(dst)
+            k.content_type = 'application/json'
+            k.set_contents_from_string(json.dumps([geometry], indent=4))
 
-            boat = Boat.objects.get(mac_address=mac_address)
-            trip = Trip.objects.get(mac_address=boat, date=date)
-            trip.json_filepath = dst
-            trip.save()
+        boat = Boat.objects.get(mac_address=mac_address)
+        trip = Trip.objects.get(boat=boat, date=date)
+        trip.json_filepath = dst
+        trip.save()
 
 
 
@@ -156,10 +155,10 @@ def load_image():
     conn = get_connection_bucket()
     bucket_src = conn.get_bucket('shellcatch')
     src = 'media/uploads/container/temp/'
-    dst = 'media/uploads/container/'
+    dst = 'media/uploads/container'
     folders = bucket_src.list(prefix=src, delimiter='.jpg')
-    image_directory = ''
-    result_point = list()
+    result_dict = dict()
+    geometry = ''
     i = 0
     for k in folders:
         i += 1
@@ -167,21 +166,22 @@ def load_image():
         if extension_correct:
             image_name = k.name.split("/")[-1]
             image_directory = k.name.split("/")[-2]
-            path_dst = "{0}{1}/{2}".format(str(dst), str(image_directory), str(image_name))
+            path_dst = "{0}/{1}/{2}".format(str(dst), str(image_directory), str(image_name))
             name = k.name
+            # push database
             create_trip_ = create_trip(name, path_dst)
-
-            geometry = generated_geometry(create_trip_, image_directory)
-            result_point.append(geometry)
+            geometry = generated_geometry(create_trip_, image_directory, result_dict, path_dst)
+            print("geometry {0}.-{1}".format(str(i), str(geometry)))
             bucket_src.lookup(k.name)
             bucket_src.copy_key(path_dst, bucket_src.name, k.name)
             bucket_src.delete_key(k.name)
         if i == 4:
             break
-    print(result_point)
-    if result_point:
-        if image_directory:
-            create_json_file(result_point)
+
+    print(geometry)
+
+    # if geometry:
+    #     create_json_file(geometry)
 
     return str('Successfull')
 
