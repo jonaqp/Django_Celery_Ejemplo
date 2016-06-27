@@ -134,14 +134,14 @@ def create_json_file(data):
 
         if data_request:
             d = json.loads(data_request)
-            new_data = d + [geometry]
+            new_data = d + geometry
             k = bucket_src.new_key(dst)
             k.content_type = 'application/json'
             k.set_contents_from_string(json.dumps(new_data, indent=4))
         else:
             k = bucket_src.new_key(dst)
             k.content_type = 'application/json'
-            k.set_contents_from_string(json.dumps([geometry], indent=4))
+            k.set_contents_from_string(json.dumps(geometry, indent=4))
 
         boat = Boat.objects.get(mac_address=mac_address)
         trip = Trip.objects.get(boat=boat, date=date)
@@ -158,7 +158,7 @@ def load_image():
     dst = 'media/uploads/container'
     folders = bucket_src.list(prefix=src, delimiter='.jpg')
     result_dict = dict()
-    geometry = ''
+    geometry = dict()
     i = 0
     for k in folders:
         i += 1
@@ -171,17 +171,15 @@ def load_image():
             # push database
             create_trip_ = create_trip(name, path_dst)
             geometry = generated_geometry(create_trip_, image_directory, result_dict, path_dst)
-            print("geometry {0}.-{1}".format(str(i), str(geometry)))
+
             bucket_src.lookup(k.name)
             bucket_src.copy_key(path_dst, bucket_src.name, k.name)
             bucket_src.delete_key(k.name)
         if i == 4:
             break
 
-    print(geometry)
-
-    # if geometry:
-    #     create_json_file(geometry)
+    if geometry:
+        create_json_file(geometry)
 
     return str('Successfull')
 
