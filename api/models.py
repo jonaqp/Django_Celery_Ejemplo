@@ -63,32 +63,43 @@ class Boat(Document):
 
 
 class Trip(Document):
-    mac_address = ReferenceField(Boat)
+    boat = ReferenceField(Boat)
+    mac_address = StringField(max_length=50)
     date = StringField(max_length=50)
     json_filepath = StringField(max_length=255)
+    txt_filepath = StringField(max_length=255)
+    cvs_filepath = StringField(max_length=255)
     video_filepath = StringField(max_length=255)
     image = ListField(EmbeddedDocumentField(Image))
 
     @staticmethod
     def create(date_image, mac_address, is_new=True):
-        new_mac_address = mac_address
+        new_boat = mac_address
         if mac_address and is_new:
-            new_mac_address = Boat.create(mac_address)
+            new_boat = Boat.create(mac_address)
             trip = Trip()
             trip.date = date_image
             trip.json_filepath = ''
-            trip.mac_address = new_mac_address
+            trip.txt_filepath = ''
+            trip.cvs_filepath = ''
+            trip.video_filepath = ''
+            trip.boat = new_boat
+            trip.mac_address = new_boat.mac_address
             trip.save()
             return trip
         elif mac_address and not is_new:
-            new_mac_address = new_mac_address
-            trip = Trip.objects.filter(mac_address=new_mac_address, date=date_image)
+            new_boat = new_boat
+            trip = Trip.objects.filter(mac_address=new_boat, date=date_image)
             if trip:
-                trip = Trip.objects.get(mac_address=new_mac_address, date=date_image)
+                trip = Trip.objects.get(mac_address=new_boat, date=date_image)
             else:
                 trip = Trip()
                 trip.date = date_image
                 trip.json_filepath = ''
-                trip.mac_address = new_mac_address
+                trip.txt_filepath = ''
+                trip.cvs_filepath = ''
+                trip.video_filepath = ''
+                trip.boat = new_boat
+                trip.mac_address = new_boat.mac_address
                 trip.save()
             return trip
