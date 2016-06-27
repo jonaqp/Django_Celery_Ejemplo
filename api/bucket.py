@@ -1,5 +1,8 @@
-import boto.s3.connection
 import json
+import os
+import boto.s3.connection
+from boto.s3.key import Key
+
 from api.models import Boat, Trip, Image
 from api.utils.funct_dates import (
     convert_str_in_datetime, convert_unix_in_datetime)
@@ -95,30 +98,29 @@ def create_trip(picture, path_dst):
 
 
 def create_json_file(data, image_directory):
-    print("Create json")
-    json_file = json.dumps(data, indent=4)
     conn = get_connection_bucket()
     bucket_src = conn.get_bucket('shellcatch')
-    src = 'media/uploads/container/'
+    src = 'media/uploads/container'
     name_directory = image_directory
-    file = "{0}.json".format(str(name_directory))
     dst = "{0}/{1}/{2}.json".format(str(src), str(name_directory), str(name_directory))
+    url = "{0}{1}".format(AWS_S3_CUSTOM_DOMAIN, dst)
+    import urllib.request
+    try:
+        data_request = urllib.request.urlopen(url).read().decode('utf8')
+    except urllib.error.HTTPError as e:
+        data_request = ''
+    if data_request:
+        d = json.loads(data_request)
+        new_data = d + data
+        k = bucket_src.new_key(dst)
+        k.content_type = 'application/json'
+        k.set_contents_from_string(json.dumps(new_data, indent=4))
+    else:
+        k = bucket_src.new_key(dst)
+        k.content_type = 'application/json'
+        k.set_contents_from_string(json.dumps(data, indent=4))
 
-    key = bucket_src.get_key('perl_poetry.pdf')
-    key.get_contents_to_filename('media/uploads/container/perl_poetry.pdf')
 
-        # src = 'media/uploads/container'
-    # name_directory = image_directory
-    # dst = "{0}/{1}/{2}.json".format(str(src), str(name_directory), str(name_directory))
-    # folders = bucket_src.list(dst)
-    # for k in folders:
-    #     if k.name:
-    #         bucket_src.lookup(k.name)
-    #         bucket_src.delete_key(k.name)
-    #         with open(dst, 'wb+') as destination:
-    #             destination.write(json_file)
-    #         key = bucket_src.new_key(destination)
-    #         key.set_contents_from_filename(dst)
 
 
 def load_image():
@@ -129,10 +131,10 @@ def load_image():
     folders = bucket_src.list(prefix=src, delimiter='.jpg')
     image_directory = ''
     result_point = list()
-
     for k in folders:
         extension_correct = k.name.endswith(('.jpg', '.jpeg'))
         if extension_correct:
+            print(k.name)
             image_name = k.name.split("/")[-1]
             image_directory = k.name.split("/")[-2]
             path_dst = "{0}{1}/{2}".format(str(dst), str(image_directory), str(image_name))
