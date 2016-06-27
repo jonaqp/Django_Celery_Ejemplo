@@ -65,8 +65,8 @@ class Boat(Document):
 class Trip(Document):
     mac_address = ReferenceField(Boat)
     date = StringField(max_length=50)
-    json_filepath = URLField()
-    video_filepath = URLField()
+    json_filepath = StringField(max_length=255)
+    video_filepath = StringField(max_length=255)
     image = ListField(EmbeddedDocumentField(Image))
 
     @staticmethod
@@ -76,6 +76,7 @@ class Trip(Document):
             new_mac_address = Boat.create(mac_address)
             trip = Trip()
             trip.date = date_image
+            trip.json_filepath = ''
             trip.mac_address = new_mac_address
             trip.save()
             return trip
@@ -87,6 +88,7 @@ class Trip(Document):
             else:
                 trip = Trip()
                 trip.date = date_image
+                trip.json_filepath = ''
                 trip.mac_address = new_mac_address
                 trip.save()
             return trip
