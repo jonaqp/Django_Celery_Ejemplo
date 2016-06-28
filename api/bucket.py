@@ -211,11 +211,6 @@ def write_csv(filename, rows):
         f.close()
 
 
-saveFile = open('{}_dailyReport.xml'.format(today), 'wb')
-saveFile.write(soup)
-saveFile.close()
-
-
 def load_image():
     conn = get_connection_bucket()
     bucket_src = conn.get_bucket('shellcatch')
