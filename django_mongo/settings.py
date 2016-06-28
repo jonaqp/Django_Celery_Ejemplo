@@ -118,9 +118,9 @@ USE_TZ = True
 import djcelery
 djcelery.setup_loader()
 
-BROKER_URL = env('BROKER_URL', default='redis://localhost:6379/0')
-BROKER_TRANSPORT = env('BROKER_TRANSPORT')
-CELERYBEAT_SCHEDULER = env('CELERYBEAT_SCHEDULER')
+BROKER_URL = 'amqp://FOfbuCfB:zxKFzcdwEP43Kzo1Z1_is9bx5MVyAgoE@sad-thethuthinnang-43.bigwig.lshift.net:10982/uVgu2ReZjlPi'
+BROKER_TRANSPORT = 'amqp'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 
