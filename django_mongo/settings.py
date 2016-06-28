@@ -118,7 +118,7 @@ USE_TZ = True
 import djcelery
 djcelery.setup_loader()
 
-BROKER_URL = 'amqp://FOfbuCfB:zxKFzcdwEP43Kzo1Z1_is9bx5MVyAgoE@sad-thethuthinnang-43.bigwig.lshift.net:10982/uVgu2ReZjlPi'
+BROKER_URL = 'amqp://QnAPSFFj:s0nvgH0nubpi_ilni_glhkqIJE54XUYs@sad-thethuthinnang-43.bigwig.lshift.net:10650/ZBmOTqstQ6MP'
 BROKER_TRANSPORT = 'amqp'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_TASK_SERIALIZER = "json"
