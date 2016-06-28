@@ -8,3 +8,4 @@ wand
 Pillow
 django-storages
 backports.csv
+wheel==0.24.0
