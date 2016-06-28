@@ -80,7 +80,6 @@ class Trip(Document):
             trip = Trip()
             trip.date = date_image
             trip.json_filepath = ''
-            trip.txt_filepath = ''
             trip.cvs_filepath = ''
             trip.video_filepath = ''
             trip.boat = new_boat
@@ -96,7 +95,6 @@ class Trip(Document):
                 trip = Trip()
                 trip.date = date_image
                 trip.json_filepath = ''
-                trip.txt_filepath = ''
                 trip.cvs_filepath = ''
                 trip.video_filepath = ''
                 trip.boat = new_boat

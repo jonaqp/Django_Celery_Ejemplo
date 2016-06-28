@@ -1,7 +1,9 @@
+import io
 import json
 import os
+
 import boto.s3.connection
-from boto.s3.key import Key
+from backports import csv
 
 from api.models import Boat, Trip, Image
 from api.utils.funct_dates import (
@@ -108,7 +110,8 @@ def generated_geometry(create_trip_, image_directory, result_dict, path_dst):
         dict(
             longitude=str(create_trip_['longitude']),
             latitude=str(create_trip_['latitude']),
-            image_filepath=path_dst
+            image_filepath=path_dst,
+            datetime=str(create_trip_['datetime'])
         )
     )
     return result_dict
@@ -149,6 +152,68 @@ def create_json_file(data):
         trip.save()
 
 
+def create_file_csv(data):
+    conn = get_connection_bucket()
+    bucket_src = conn.get_bucket('shellcatch')
+    src = 'media/uploads/container'
+
+    for i, j in data.items():
+        date = j['date']
+        mac_address = j['mac_address']
+        geometry = j['geometry']
+
+        name_directory = "{0}_{1}".format(str(mac_address), str(date))
+        name_file = "{0}.csv".format(str(name_directory))
+        dst = "{0}/{1}/{2}.csv".format(str(src), str(name_directory), str(name_directory))
+        url = "{0}{1}".format(AWS_S3_CUSTOM_DOMAIN, dst)
+
+        import urllib.request
+        try:
+            data_request = urllib.request.urlopen(url).read().decode('utf8')
+        except urllib.error.HTTPError as e:
+            data_request = ''
+
+        if data_request:
+            urllib.request.urlretrieve(url, name_file)
+            write_csv_add(name_file, geometry)
+            k = bucket_src.new_key(dst)
+            k.content_type = 'text/csv'
+            k.set_contents_from_string(name_file)
+            os.remove(name_file)
+
+        else:
+
+            write_csv(name_file, geometry)
+            k = bucket_src.new_key(dst)
+            k.content_type = 'text/csv'
+            k.set_contents_from_filename(name_file)
+            os.remove(name_file)
+
+        boat = Boat.objects.get(mac_address=mac_address)
+        trip = Trip.objects.get(boat=boat, date=date)
+        trip.cvs_filepath = dst
+        trip.save()
+
+
+def write_csv_add(filename, rows):
+    with io.open(filename, 'a+', newline='') as f:
+        writer = csv.writer(f)
+        for row in rows:
+            writer.writerow([row["latitude"], row["longitude"], row["datetime"]])
+
+
+def write_csv(filename, rows):
+    with io.open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["latitude", "longitude", "datetime"])
+        for row in rows:
+            writer.writerow([row["latitude"], row["longitude"], row["datetime"]])
+        f.close()
+
+
+saveFile = open('{}_dailyReport.xml'.format(today), 'wb')
+saveFile.write(soup)
+saveFile.close()
 
 
 def load_image():
@@ -159,9 +224,9 @@ def load_image():
     folders = bucket_src.list(prefix=src, delimiter='.jpg')
     result_dict = dict()
     geometry = dict()
-    i = 0
+    # i = 0
     for k in folders:
-        i += 1
+        # i += 1
         extension_correct = k.name.endswith(('.jpg', '.jpeg'))
         if extension_correct:
             image_name = k.name.split("/")[-1]
@@ -175,11 +240,12 @@ def load_image():
             bucket_src.lookup(k.name)
             bucket_src.copy_key(path_dst, bucket_src.name, k.name)
             bucket_src.delete_key(k.name)
-        if i == 4:
-            break
+            # if i == 4:
+            #     break
 
     if geometry:
         create_json_file(geometry)
+        create_file_csv(geometry)
 
     return str('Successfull')
 
