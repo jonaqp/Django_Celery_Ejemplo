@@ -8,11 +8,11 @@ logger = get_task_logger(__name__)
 
 
 @shared_task()
-def fetch_url():
-    scraper_example()
+def task_load_database():
+    general_function_bucket()
 
 
-def scraper_example():
+def general_function_bucket():
     logger.info("Start task")
     a = load_image()
     logger.info("Task finished: result = %s" % str(a))
