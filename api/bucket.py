@@ -5,7 +5,7 @@ import os
 import boto.s3.connection
 from backports import csv
 
-from api.models import Boat, Trip, Image
+from api.models import Boats, Trips, Image
 from api.utils.funct_dates import (
     convert_str_in_datetime, convert_unix_in_datetime)
 from api.utils.read_exif import (
@@ -88,14 +88,14 @@ def create_trip(picture, path_dst):
     mac_address = picture_format['mac_address']
     date_time = picture_format['datetime']
     date_ = str(date_time.date())
-    boat = Boat.objects.filter(mac_address=mac_address)
+    boat = Boats.objects.filter(mac_address=mac_address)
 
     if not boat:
-        trip = Trip.create(date_, mac_address, is_new=True)
+        trip = Trips.create(date_, mac_address, is_new=True)
         create_append_image(trip, picture_format, path_dst)
     else:
-        boat = Boat.objects.get(mac_address=mac_address)
-        trip = Trip.create(date_, boat, is_new=False)
+        boat = Boats.objects.get(mac_address=mac_address)
+        trip = Trips.create(date_, boat, is_new=False)
         create_append_image(trip, picture_format, path_dst)
     return picture_format
 
@@ -146,8 +146,8 @@ def create_json_file(data):
             k.content_type = 'application/json'
             k.set_contents_from_string(json.dumps(geometry, indent=4))
 
-        boat = Boat.objects.get(mac_address=mac_address)
-        trip = Trip.objects.get(boat=boat, date=date)
+        boat = Boats.objects.get(mac_address=mac_address)
+        trip = Trips.objects.get(boat=boat, date=date)
         trip.json_filepath = dst
         trip.save()
 
@@ -189,8 +189,8 @@ def create_file_csv(data):
             k.set_contents_from_filename(name_file)
             os.remove(name_file)
 
-        boat = Boat.objects.get(mac_address=mac_address)
-        trip = Trip.objects.get(boat=boat, date=date)
+        boat = Boats.objects.get(mac_address=mac_address)
+        trip = Trips.objects.get(boat=boat, date=date)
         trip.cvs_filepath = dst
         trip.save()
 

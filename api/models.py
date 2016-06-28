@@ -46,24 +46,24 @@ class Image(EmbeddedDocument):
     battery_level = StringField(max_length=10)
 
 
-class Boat(Document):
+class Boats(Document):
     mac_address = StringField(max_length=50)
     country = EmbeddedDocumentField(Country)
     company = EmbeddedDocumentField(Company)
     phone = EmbeddedDocumentField(Phone)
     port = EmbeddedDocumentField(Port)
-    events = EmbeddedDocumentField(Events)
+
 
     @staticmethod
     def create(mac_address):
-        boat = Boat()
+        boat = Boats()
         boat.mac_address = mac_address
         boat.save()
         return boat
 
 
-class Trip(Document):
-    boat = ReferenceField(Boat)
+class Trips(Document):
+    boat = ReferenceField(Boats)
     mac_address = StringField(max_length=50)
     date = StringField(max_length=50)
     json_filepath = StringField(max_length=255)
@@ -71,13 +71,14 @@ class Trip(Document):
     cvs_filepath = StringField(max_length=255)
     video_filepath = StringField(max_length=255)
     image = ListField(EmbeddedDocumentField(Image))
+    events = EmbeddedDocumentField(Events)
 
     @staticmethod
     def create(date_image, mac_address, is_new=True):
         new_boat = mac_address
         if mac_address and is_new:
-            new_boat = Boat.create(mac_address)
-            trip = Trip()
+            new_boat = Boats.create(mac_address)
+            trip = Trips()
             trip.date = date_image
             trip.json_filepath = ''
             trip.cvs_filepath = ''
@@ -88,11 +89,11 @@ class Trip(Document):
             return trip
         elif mac_address and not is_new:
             new_boat = new_boat
-            trip = Trip.objects.filter(boat=new_boat, date=date_image)
+            trip = Trips.objects.filter(boat=new_boat, date=date_image)
             if trip:
-                trip = Trip.objects.get(boat=new_boat, date=date_image)
+                trip = Trips.objects.get(boat=new_boat, date=date_image)
             else:
-                trip = Trip()
+                trip = Trips()
                 trip.date = date_image
                 trip.json_filepath = ''
                 trip.cvs_filepath = ''
