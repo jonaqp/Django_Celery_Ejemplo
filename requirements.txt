@@ -9,3 +9,5 @@ Pillow
 django-storages
 backports.csv
 wheel==0.24.0
+gunicorn==19.6.0
+django-toolbelt==0.0.1
