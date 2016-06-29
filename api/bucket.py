@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import datetime as datetimex
 
 import boto.s3.connection
 from backports import csv
@@ -41,7 +42,7 @@ def get_validate_format(string_picture):
 
     if len(file_base) == 5:
         string_val = str(file_base[-1].split('.')[0])
-        if not string_val == 'ori0':
+        if string_val not in ('ori0', 'ori1', 'ori2', 'ori3', 'ori4', 'ori5', 'ori6'):
             mac_address = file_base[1]
             picture_date = "{0}-{1}-{2}".format(str(file_base[2]),
                                                 str(file_base[3]),
@@ -211,6 +212,20 @@ def write_csv(filename, rows):
         f.close()
 
 
+def get_temp_list_folder():
+    conn = get_connection_bucket()
+    bucket_src = conn.get_bucket('shellcatch')
+    src = 'media/uploads/container/temp/'
+    folders = bucket_src.list(prefix=src, delimiter='/')
+    result_list = list()
+    for k in folders:
+        name = k.name.split("/")[-2]
+        result_list.append(name)
+    new_result = result_list[1:]
+    result = dict(list_folder=new_result, bucket_src=bucket_src)
+    return result
+
+
 def load_image():
     conn = get_connection_bucket()
     bucket_src = conn.get_bucket('shellcatch')
@@ -246,4 +261,4 @@ def load_image():
 
 
 if __name__ == "__main__":
-    load_image()
+    get_temp_list_folder()
