@@ -54,14 +54,6 @@ class Boats(Document):
     port = EmbeddedDocumentField(Port)
 
 
-    @staticmethod
-    def create(mac_address):
-        boat = Boats()
-        boat.mac_address = mac_address
-        boat.save()
-        return boat
-
-
 class Trips(Document):
     boat = ReferenceField(Boats)
     mac_address = StringField(max_length=50)
@@ -73,32 +65,3 @@ class Trips(Document):
     image = ListField(EmbeddedDocumentField(Image))
     events = EmbeddedDocumentField(Events)
 
-    @staticmethod
-    def create(date_image, mac_address, is_new=True):
-        new_boat = mac_address
-        if mac_address and is_new:
-            new_boat = Boats.create(mac_address)
-            trip = Trips()
-            trip.date = date_image
-            trip.json_filepath = ''
-            trip.cvs_filepath = ''
-            trip.video_filepath = ''
-            trip.boat = new_boat
-            trip.mac_address = new_boat.mac_address
-            trip.save()
-            return trip
-        elif mac_address and not is_new:
-            new_boat = new_boat
-            trip = Trips.objects.filter(boat=new_boat, date=date_image)
-            if trip:
-                trip = Trips.objects.get(boat=new_boat, date=date_image)
-            else:
-                trip = Trips()
-                trip.date = date_image
-                trip.json_filepath = ''
-                trip.cvs_filepath = ''
-                trip.video_filepath = ''
-                trip.boat = new_boat
-                trip.mac_address = new_boat.mac_address
-                trip.save()
-            return trip
