@@ -118,7 +118,7 @@ USE_TZ = True
 import djcelery
 djcelery.setup_loader()
 
-BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+BROKER_URL = 'amqp://TXltB7ZR:S6aGB8wchSmeltZhJqRIcbyihntDLijU@scared-strawberry-43.bigwig.lshift.net:10982/dXwsXSuTq6kt'
 BROKER_TRANSPORT = 'amqp'
 CELERY_RESULT_BACKEND = "amqp"
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
