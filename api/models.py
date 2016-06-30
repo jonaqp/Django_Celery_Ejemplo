@@ -60,7 +60,7 @@ class Trips(Document):
     date = StringField(max_length=50)
     json_filepath = StringField(max_length=255)
     txt_filepath = StringField(max_length=255)
-    cvs_filepath = StringField(max_length=255)
+    csv_filepath = StringField(max_length=255)
     video_filepath = StringField(max_length=255)
     image = ListField(EmbeddedDocumentField(Image))
     events = EmbeddedDocumentField(Events)
