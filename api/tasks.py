@@ -264,6 +264,7 @@ def task_move_parent_directory(list_folder, bucket_src):
             if k.name:
                 image_name = k.name.split("/")[-1]
                 path_dst = "{0}/{1}/{2}".format(str(src), str(directory), str(image_name))
+
                 bucket_src.lookup(k.name)
                 bucket_src.copy_key(path_dst, bucket_src.name, k.name)
                 bucket_src.delete_key(k.name)
