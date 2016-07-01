@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime as datetime_global
 import io
 import json
 import os
@@ -29,9 +29,8 @@ def prueba_resta(x, y):
 
 
 @app.task(trail=True)
-def get_temp_list_folder():
-    conn = get_connection_bucket()
-    bucket_src = conn.get_bucket('shellcatch')
+def get_temp_list_folder(bucket_src):
+    print("Task Get all folder s3: result = %s" % str(datetime_global.now().strftime('%Y-%m-%d %H:%M:%S')))
     src = 'media/uploads/container/temp/'
     dst = 'media/uploads/container'
     folders = bucket_src.list(prefix=src, delimiter='/')
@@ -54,17 +53,17 @@ def get_temp_list_folder():
                 picture_format = group(get_validate_format.s(str(image_name))).apply_async()
                 path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(image_name))
                 if i not in result_image_dict.keys():
-                    result_image_dict[i] = dict(directory='', mac_address='', date='',
+                    result_image_dict[i] = dict(directory="", mac_address="", date="",
                                                 image_list=list(), geometry_list=list())
-                result_image_dict[i]['directory'] = directory
-                result_image_dict[i]['mac_address'] = mac_address
-                result_image_dict[i]['date'] = date
-                result_image_dict[i]['image_list'].append(image_name)
-                result_image_dict[i]['geometry_list'].append(
+                result_image_dict[i]["directory"] = directory
+                result_image_dict[i]["mac_address"] = mac_address
+                result_image_dict[i]["date"] = date
+                result_image_dict[i]["image_list"].append(image_name)
+                result_image_dict[i]["geometry_list"].append(
                     dict(
                         mac_address=str(mac_address),
                         date=str(date),
-                        time=str(picture_format.join()[0]['datetime']),
+                        time=str(picture_format.join()[0]['time']),
                         longitude=str(picture_format.join()[0]['longitude']),
                         latitude=str(picture_format.join()[0]['latitude']),
                         image_filepath=path_dst,
@@ -72,7 +71,7 @@ def get_temp_list_folder():
                         battery_level=str(picture_format.join()[0]['battery_level'])
                     )
                 )
-    result = dict(folder_list=result_image_dict, bucket_src=bucket_src)
+    result = dict(folder_list=result_image_dict)
     return result
 
 
@@ -123,9 +122,10 @@ def get_validate_format(string_picture):
     if len(file_base) == 8:
         mac_address = file_base[1]
         new_datetime = convert_str_in_datetime(convert_unix_in_datetime(file_base[3]))
+        time = new_datetime.time()
         latitude = float(file_base[4][3:])
         longitude = float(file_base[5][3:])
-        result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+        result = dict(datetime=str(new_datetime), time=str(time), mac_address=str(mac_address),
                       is_new=False, latitude=str(latitude), longitude=str(longitude), battery_level='')
     if len(file_base) == 5:
         string_val = str(file_base[-1].split('.')[0])
@@ -146,15 +146,17 @@ def get_validate_format(string_picture):
             latitude = convert_degress_to_decimal(metadata_latitude)
             longitude = convert_degress_to_decimal(metadata_longitude)
             new_datetime = convert_str_in_datetime(string_datetime_now)
-            result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+            time = new_datetime.time()
+            result = dict(datetime=str(new_datetime), time=str(time), mac_address=str(mac_address),
                           is_new=True, latitude=str(latitude), longitude=str(longitude),
                           battery_level=str(metadata_batterylevel))
         else:
             mac_address = file_base[1]
             new_datetime = convert_str_in_datetime(convert_unix_in_datetime(file_base[3]))
+            time = new_datetime.time()
             latitude = ''
             longitude = ''
-            result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+            result = dict(datetime=str(new_datetime), time=str(time), mac_address=str(mac_address),
                           is_new=False, latitude=str(latitude), longitude=str(longitude), battery_level='')
     return result
 
@@ -173,6 +175,7 @@ def create_append_image(trip_obj, picture_format, path_dst):
 
 @app.task(trail=True)
 def create_trip(list_folder):
+    print("Task Create Trip: result = %s" % str(datetime_global.now().strftime('%Y-%m-%d %H:%M:%S')))
     for a, b in list_folder.items():
         directory = b['directory']
         dst = 'media/uploads/container'
@@ -204,6 +207,7 @@ def create_trip(list_folder):
 
 @app.task(trail=True)
 def task_create_json_file(list_folder, bucket_src):
+    print("Task Create Json: result = %s" % str(datetime_global.now().strftime('%Y-%m-%d %H:%M:%S')))
     for a, b in list_folder.items():
         directory = b['directory']
         src = 'media/uploads/container/temp'
@@ -226,6 +230,7 @@ def write_csv(filename, rows):
 
 @app.task()
 def task_create_file_csv(list_folder, bucket_src):
+    print("Task Create Csv result = %s" % str(datetime_global.now().strftime('%Y-%m-%d %H:%M:%S')))
     for a, b in list_folder.items():
         directory = b['directory']
         src = 'media/uploads/container/temp'
@@ -239,14 +244,14 @@ def task_create_file_csv(list_folder, bucket_src):
         os.remove(name_file)
 
 
-@app.task()
+@app.task(soft_time_limit=40)
 def task_move_parent_directory(list_folder, bucket_src):
+    print("Task Move parent folder: result = %s" % str(datetime_global.now().strftime('%Y-%m-%d %H:%M:%S')))
     for a, b in list_folder.items():
         directory = b['directory']
         src = 'media/uploads/container'
         path_src = "{0}/temp/{1}/".format(str(src), str(directory))
         folders = bucket_src.list(prefix=path_src)
-
         for k in folders:
             if k.name:
                 image_name = k.name.split("/")[-1]
@@ -258,23 +263,11 @@ def task_move_parent_directory(list_folder, bucket_src):
 
 @shared_task()
 def run_folder():
-    now = datetime.datetime.now()
-    logger.info("Task Get all folder s3: result = %s" % str(now))
-    temp_list = get_temp_list_folder()
+    conn = get_connection_bucket()
+    bucket_src = conn.get_bucket('shellcatch')
+    temp_list = get_temp_list_folder(bucket_src)
     list_folder = temp_list['folder_list']
-    bucket_src = temp_list['bucket_src']
-    logger.info("Task Finish Get all folder s3: result = %s" % str(now))
-
-    logger.info("Task Create Trip: result = %s" % str(now))
-    create_trip(list_folder)
-
-    logger.info("Task Create Json: result = %s" % str(now))
-    task_create_json_file(list_folder, bucket_src)
-
-    logger.info("Task Create Csv result = %s" % str(now))
-    task_create_file_csv(list_folder, bucket_src)
-
-    logger.info("Task Move parent folder: result = %s" % str(now))
+    create_trip.delay(list_folder)
+    task_create_json_file.delay(list_folder, bucket_src)
+    task_create_file_csv.delay(list_folder, bucket_src)
     task_move_parent_directory(list_folder, bucket_src)
-
-    logger.info("Task finished: result = %s" % str(now))

@@ -8,6 +8,7 @@ SETTINGS_DIR = environ.Path(__file__) - 1
 DJANGO_ROOT = environ.Path(__file__) - 2
 SETTINGS_NAME = basename(str(SETTINGS_DIR))
 PROJECT_NAME = basename(str(DJANGO_ROOT))
+
 PROJECT_TEMPLATES = [
     str(DJANGO_ROOT.path('templates')),
 ]
@@ -36,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'djcelery',
     'api',
+    'rest_framework',
+    'rest_framework_mongoengine',
 
 ]
 
@@ -53,12 +56,10 @@ MIDDLEWARE_CLASSES = [
 
 ROOT_URLCONF = '%s.urls' % SETTINGS_NAME
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': PROJECT_TEMPLATES,
-        'APP_DIRS': False,
         'OPTIONS': {
             'debug': DEBUG,
             'context_processors': [
@@ -68,10 +69,14 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
+                'django.template.context_processors.tz',
             ],
             'loaders': [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
+                ('django.template.loaders.cached.Loader',
+                 (
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                 ))
             ],
         },
     },
@@ -103,6 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
+SITE = 1
 
 LANGUAGE_CODE = 'en-us'
 
@@ -135,6 +141,9 @@ MONGODB_DATABASE_HOST = \
     % (MONGODB_USER, MONGODB_PASSWD, MONGODB_HOST, MONGODB_NAME)
 
 
+# STATIC_URL = '/static/'
+# MEDIA_URL = '/media/'
+
 STATIC_ROOT = str(DJANGO_ROOT.path('run/static'))
 MEDIA_ROOT = str(DJANGO_ROOT.path('run/media'))
 
@@ -151,9 +160,6 @@ AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-
-AWS_AUTO_CREATE_BUCKET = True
-AWS_QUERYSTRING_AUTH = False
 AWS_EXPIRY = 60 * 60 * 24 * 7
 AWS_PRELOAD_METADATA = True
 AWS_HEADERS = {
