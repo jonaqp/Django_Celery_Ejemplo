@@ -7,14 +7,13 @@ from backports import csv
 from celery import shared_task, group
 from celery.utils.log import get_task_logger
 
-# from api.bucket import load_image
-from api.utils.connection import get_connection_bucket
-from django_mongo.celery import app
 from api.models import Boats, Trips, Image
+from api.utils.connection import get_connection_bucket, AWS_S3_CUSTOM_DOMAIN
 from api.utils.funct_dates import (
     convert_str_in_datetime, convert_unix_in_datetime)
 from api.utils.read_exif import (
     get_exif_dumps, get_exif_loads, convert_degress_to_decimal)
+from django_mongo.celery import app
 
 logger = get_task_logger(__name__)
 
@@ -27,18 +26,6 @@ def prueba_suma(x, y):
 @app.task
 def prueba_resta(x, y):
     return x - y
-
-
-@shared_task()
-def fetch_url():
-    scraper_example()
-
-
-def scraper_example():
-    logger.info("Start task")
-    # a = load_image()
-    now = datetime.datetime.now()
-    logger.info("Task finished: result = %s" % str(now))
 
 
 @app.task(trail=True)
@@ -149,7 +136,7 @@ def get_validate_format(string_picture):
                                                 str(file_base[4].split(".")[0].split("-")[2]),
                                                 str(file_base[4].split(".")[0].split("-")[3]))
             string_datetime_now = "{0} {1}".format(str(picture_date), str(picture_hour))
-            url = "{0}{1}".format(str(AWS_S3_CUSTOM_DOMAIN), str(string_picture))
+            url = "{0}temp/{1}".format(str(AWS_S3_CUSTOM_DOMAIN), str(string_picture))
             url_exif_data = get_exif_dumps(url)
             metadata_latitude = get_exif_loads(url_exif_data)[0]['exif:GPSLatitude']
             metadata_longitude = get_exif_loads(url_exif_data)[0]['exif:GPSLongitude']
@@ -171,10 +158,10 @@ def get_validate_format(string_picture):
 
 @app.task(trail=True)
 def create_append_image(trip_obj, picture_format, path_dst):
-    time = str(picture_format.join()[0]['datetime'].time())
-    latitude = str(picture_format.join()[0]['latitude'])
-    longitude = str(picture_format.join()[0]['longitude'])
-    battery = str(picture_format.join()[0]['battery']) or '0'
+    time = str(picture_format['datetime'].time())
+    latitude = str(picture_format['latitude'])
+    longitude = str(picture_format['longitude'])
+    battery = str(picture_format['battery']) or '0'
     image_ = Image(image_filepath=path_dst, latitude=latitude, longitude=longitude,
                    orientation='', battery_level=battery, time=time)
     trip_obj.image.append(image_)
@@ -274,11 +261,9 @@ def run_folder():
     bucket_src = temp_list['bucket_src']
     now = datetime.datetime.now()
     logger.info("Task Start: result = %s" % str(now))
-
     create_trip(list_folder)
     task_create_json_file(list_folder, bucket_src)
     task_create_file_csv(list_folder, bucket_src)
     task_move_parent_directory(list_folder, bucket_src)
-
     now = datetime.datetime.now()
     logger.info("Task finished: result = %s" % str(now))
