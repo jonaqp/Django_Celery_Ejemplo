@@ -1,30 +1,33 @@
-import datetime
+from time import time
 
 from api.tasks import (get_temp_list_folder, task_create_json_file, create_trip,
-                       task_create_file_csv, task_move_parent_directory, logger)
+                       task_create_file_csv, task_move_parent_directory)
+from api.utils.connection import get_connection_bucket
 
 
 def run_folder():
-    now = datetime.datetime.now()
-    logger.info("Task Get all folder s3: result = %s" % str(now))
-    temp_list = get_temp_list_folder()
+    print("Task Get all folder s3: result = %s" % str(time()))
+    conn = get_connection_bucket()
+    bucket_src = conn.get_bucket('shellcatch')
+    temp_list = get_temp_list_folder(bucket_src)
     list_folder = temp_list['folder_list']
-    bucket_src = temp_list['bucket_src']
-    logger.info("Task Finish Get all folder s3: result = %s" % str(now))
 
-    logger.info("Task Create Trip: result = %s" % str(now))
-    create_trip(list_folder)
+    print("Task Finish Get all folder s3: result = %s" % str(time()))
 
-    logger.info("Task Create Json: result = %s" % str(now))
-    task_create_json_file(list_folder, bucket_src)
+    print("Task Create Trip: result = %s" % str(time()))
+    print(list_folder)
+    create_trip.delay(list_folder)
 
-    logger.info("Task Create Csv result = %s" % str(now))
-    task_create_file_csv(list_folder, bucket_src)
+    print("Task Create Json: result = %s" % str(time()))
+    task_create_json_file.delay(list_folder, bucket_src)
 
-    logger.info("Task Move parent folder: result = %s" % str(now))
+    print("Task Create Csv result = %s" % str(time()))
+    task_create_file_csv.delay(list_folder, bucket_src)
+
+    print("Task Move parent folder: result = %s" % str(time()))
     task_move_parent_directory(list_folder, bucket_src)
 
-    logger.info("Task finished: result = %s" % str(now))
+    print("Task finished: result = %s" % str(time()))
 
 
 if __name__ == '__main__':
