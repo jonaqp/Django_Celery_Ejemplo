@@ -11,3 +11,5 @@ backports.csv
 wheel==0.24.0
 gunicorn==19.6.0
 django-toolbelt==0.0.1
+django-rest-framework-mongoengine
+djangorestframework
