@@ -5,6 +5,13 @@ connect('heroku_h0vjb9cj',
         host='mongodb://shellcatch_dev:shellcatch_password@ds025603.mlab.com:25603/heroku_h0vjb9cj')
 
 
+class Buckets(Document):
+    bucket_name = StringField(max_length=255)
+    bucket_access_key = StringField(max_length=255)
+    bucket_secret_key = StringField(max_length=255)
+    bucket_path_image = StringField(max_length=255)
+
+
 class Events(EmbeddedDocument):
     name = StringField(max_length=50)
     time_start = StringField(max_length=100)

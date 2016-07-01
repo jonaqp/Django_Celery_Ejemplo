@@ -1,9 +1,8 @@
 from __future__ import division, unicode_literals
 
-from rest_framework import serializers
 from rest_framework_mongoengine.serializers import DocumentSerializer, EmbeddedDocumentSerializer
 
-from .models import Boats, Trips, Image
+from .models import Boats, Buckets
 
 
 class BoatSerializer(EmbeddedDocumentSerializer):
@@ -19,38 +18,14 @@ class BoatCreateUpdateSerializer(DocumentSerializer):
         depth = 2
 
 
-class TripSerializer(EmbeddedDocumentSerializer):
+class BucketSerializer(EmbeddedDocumentSerializer):
     class Meta:
-        model = Trips
+        model = Buckets
         depth = 2
 
 
-class ImageSerializer(EmbeddedDocumentSerializer):
+class BucketCreateUpdateSerializer(DocumentSerializer):
     class Meta:
-        model = Image
-        fields = ('image_filepath', 'latitude', 'longitude', 'orientation', 'battery_level',)
+        model = Buckets
+        fields = ('bucket_name', 'bucket_access_key', 'bucket_secret_key', 'bucket_path_image')
         depth = 2
-
-
-class TripCreateUpdateSerializer(DocumentSerializer):
-    mac_address = serializers.CharField()
-    image = ImageSerializer(many=True, required=False)
-
-    # datetime = serializers.DateTimeField(required=False, format='%Y-%m-%d %H:%M:%S')
-
-    class Meta:
-        model = Trips
-        fields = ('mac_address', 'date', 'time', 'json_filepath', 'image',)
-        depth = 2
-
-    def create(self, validated_data):
-        print(validated_data)
-        return super(TripCreateUpdateSerializer, self).create(validated_data)
-
-    def update(self, instance, validated_data):
-        images = validated_data.pop('image')
-        updated_instance = super(TripCreateUpdateSerializer, self).update(instance, validated_data)
-        for image_data in images:
-            updated_instance.image.append(images(**image_data))
-        updated_instance.save()
-        return updated_instance

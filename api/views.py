@@ -1,12 +1,12 @@
-from .models import Boats, Trips
+from .models import Boats, Buckets
 from django.views.generic import TemplateView
 from rest_framework_mongoengine.generics import (
     ListAPIView, CreateAPIView)
 from .serializers import (
     BoatSerializer,
     BoatCreateUpdateSerializer,
-    TripSerializer,
-    TripCreateUpdateSerializer,
+    BucketSerializer,
+    BucketCreateUpdateSerializer
 )
 
 
@@ -27,11 +27,11 @@ class BoatListAPIView(ListAPIView):
     serializer_class = BoatSerializer
 
 
-class TripCreateAPIView(CreateAPIView):
-    queryset = Trips.objects.all()
-    serializer_class = TripCreateUpdateSerializer
+class BucketListAPIView(ListAPIView):
+    queryset = Buckets.objects.all()
+    serializer_class = BucketSerializer
 
 
-class TripListAPIView(ListAPIView):
-    queryset = Trips.objects.all()
-    serializer_class = TripSerializer
+class BucketCreateAPIView(CreateAPIView):
+    queryset = Buckets.objects.all()
+    serializer_class = BucketCreateUpdateSerializer

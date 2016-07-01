@@ -3,16 +3,14 @@ from django.conf.urls import url
 from .views import (
     IndexView,
     BoatListAPIView,
-    # BoatCreateAPIView,
-    TripListAPIView,
-    # TripCreateAPIView,
+    BucketListAPIView,
+    BucketCreateAPIView
+
 )
 
 urlpatterns = [
     url(r'^$', IndexView.as_view(), name='api-task'),
     url(r'boat/$', BoatListAPIView.as_view(), name='boat'),
-    # url(r'boat/create/$', BoatCreateAPIView.as_view(), name='api-container-create'),
-    url(r'trip/$', TripListAPIView.as_view(), name='trip'),
-    # url(r'trip/create/$', TripCreateAPIView.as_view(), name='api-container-create'),
-
+    url(r'bucket/$', BucketListAPIView.as_view(), name='bucket'),
+    url(r'bucket/create/$', BucketCreateAPIView.as_view(), name='bucket-create'),
 ]
