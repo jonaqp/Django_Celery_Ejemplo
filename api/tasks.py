@@ -52,7 +52,6 @@ def get_temp_list_folder():
             if extension_correct:
                 image_name = k.name.split("/")[-1]
                 picture_format = group(get_validate_format.s(str(image_name))).apply_async()
-                print(picture_format.join())
                 path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(image_name))
                 if i not in result_image_dict.keys():
                     result_image_dict[i] = dict(directory='', mac_address='', date='',
@@ -65,10 +64,11 @@ def get_temp_list_folder():
                     dict(
                         mac_address=str(mac_address),
                         date=str(date),
+                        time=str(picture_format.join()[0]['datetime']),
                         longitude=str(picture_format.join()[0]['longitude']),
                         latitude=str(picture_format.join()[0]['latitude']),
                         image_filepath=path_dst,
-                        datetime=picture_format.join()[0]['datetime'],
+                        datetime=str(picture_format.join()[0]['datetime']),
                         battery_level=str(picture_format.join()[0]['battery_level'])
                     )
                 )
@@ -125,8 +125,8 @@ def get_validate_format(string_picture):
         new_datetime = convert_str_in_datetime(convert_unix_in_datetime(file_base[3]))
         latitude = float(file_base[4][3:])
         longitude = float(file_base[5][3:])
-        result = dict(datetime=new_datetime, mac_address=mac_address, is_new=False,
-                      latitude=latitude, longitude=longitude, battery_level='')
+        result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+                      is_new=False, latitude=str(latitude), longitude=str(longitude), battery_level='')
     if len(file_base) == 5:
         string_val = str(file_base[-1].split('.')[0])
         if string_val not in ('ori0', 'ori1', 'ori2', 'ori3', 'ori4', 'ori5', 'ori6'):
@@ -146,21 +146,22 @@ def get_validate_format(string_picture):
             latitude = convert_degress_to_decimal(metadata_latitude)
             longitude = convert_degress_to_decimal(metadata_longitude)
             new_datetime = convert_str_in_datetime(string_datetime_now)
-            result = dict(datetime=new_datetime, mac_address=mac_address, is_new=True,
-                          latitude=latitude, longitude=longitude, battery_level=metadata_batterylevel)
+            result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+                          is_new=True, latitude=str(latitude), longitude=str(longitude),
+                          battery_level=str(metadata_batterylevel))
         else:
             mac_address = file_base[1]
             new_datetime = convert_str_in_datetime(convert_unix_in_datetime(file_base[3]))
             latitude = ''
             longitude = ''
-            result = dict(datetime=new_datetime, mac_address=mac_address, is_new=False,
-                          latitude=latitude, longitude=longitude, battery_level='')
+            result = dict(datetime=str(new_datetime), time=str(new_datetime.time()), mac_address=str(mac_address),
+                          is_new=False, latitude=str(latitude), longitude=str(longitude), battery_level='')
     return result
 
 
 @app.task(trail=True)
 def create_append_image(trip_obj, picture_format, path_dst):
-    time = str(picture_format['datetime'].time())
+    time = str(picture_format['time'])
     latitude = str(picture_format['latitude'])
     longitude = str(picture_format['longitude'])
     battery_level = str(picture_format['battery_level']) or '0'
@@ -177,11 +178,11 @@ def create_trip(list_folder):
         dst = 'media/uploads/container'
         geometry_list = b['geometry_list']
         mac_address_ = b['mac_address']
-        date_ = b['date']
+        date_ = str(b['date'])
         dst_csv = "{0}/{1}/{2}.csv".format(str(dst), str(directory), str(directory))
         dst_json = "{0}/{1}/{2}.json".format(str(dst), str(directory), str(directory))
 
-        for index, img in enumerate(geometry_list):
+        for img in geometry_list:
             path_dst = str(img['image_filepath'])
             mac_address = str(img['mac_address'])
             date_ = str(img['date'])
