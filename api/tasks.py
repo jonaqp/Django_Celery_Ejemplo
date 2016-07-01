@@ -65,24 +65,24 @@ def get_temp_list_folder():
             if extension_correct:
                 image_name = k.name.split("/")[-1]
                 picture_format = group(get_validate_format.s(str(image_name))).apply_async()
-                if picture_format.successful():
-                    path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(image_name))
-                    if i not in result_image_dict.keys():
-                        result_image_dict[i] = dict(directory='', mac_address='', date='',
-                                                    image_list=list(), geometry_list=list())
-                    result_image_dict[i]['directory'] = directory
-                    result_image_dict[i]['mac_address'] = mac_address
-                    result_image_dict[i]['date'] = date
-                    result_image_dict[i]['image_list'].append(image_name)
-                    result_image_dict[i]['geometry_list'].append(
-                        dict(
-                            longitude=str(picture_format.get()[0]['longitude']),
-                            latitude=str(picture_format.get()[0]['latitude']),
-                            image_filepath=path_dst,
-                            datetime=str(picture_format.get()[0]['datetime'])
-                        )
+                path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(image_name))
+                if i not in result_image_dict.keys():
+                    result_image_dict[i] = dict(directory='', mac_address='', date='',
+                                                image_list=list(), geometry_list=list())
+                result_image_dict[i]['directory'] = directory
+                result_image_dict[i]['mac_address'] = mac_address
+                result_image_dict[i]['date'] = date
+                result_image_dict[i]['image_list'].append(image_name)
+                result_image_dict[i]['geometry_list'].append(
+                    dict(
+                        mac_address=str(mac_address),
+                        date=str(date),
+                        longitude=str(picture_format.join()[0]['longitude']),
+                        latitude=str(picture_format.join()[0]['latitude']),
+                        image_filepath=path_dst,
+                        datetime=str(picture_format.join()[0]['datetime'])
                     )
-
+                )
     result = dict(folder_list=result_image_dict, bucket_src=bucket_src)
     return result
 
@@ -186,27 +186,24 @@ def create_trip(list_folder):
     for a, b in list_folder.items():
         directory = b['directory']
         dst = 'media/uploads/container'
-        image_list = b['image_list']
+        geometry_list = b['geometry_list']
         mac_address_ = b['mac_address']
         date_ = b['date']
         dst_csv = "{0}/{1}/{2}.csv".format(str(dst), str(directory), str(directory))
         dst_json = "{0}/{1}/{2}.json".format(str(dst), str(directory), str(directory))
-        for img in image_list:
-            path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(img))
-            picture_format = group(get_validate_format.s(str(img))).apply_async()
-            if picture_format.successful():
-                mac_address = str(picture_format.get()[0]['mac_address'])
-                date_time = picture_format.join()[0]['datetime']
-                date_ = str(date_time.date())
-                boat = Boats.objects.filter(mac_address=mac_address)
 
-                if not boat:
-                    trip = create_obj_trip(date_, mac_address, is_new=True)
-                    create_append_image(trip, picture_format, path_dst)
-                else:
-                    boat = Boats.objects.get(mac_address=mac_address)
-                    trip = create_obj_trip(date_, boat, is_new=False)
-                    create_append_image(trip, picture_format, path_dst)
+        for index, img in enumerate(geometry_list):
+            path_dst = str(img['image_filepath'])
+            mac_address = str(img['mac_address'])
+            date_ = str(img['date'])
+            boat = Boats.objects.filter(mac_address=mac_address)
+            if not boat:
+                trip = create_obj_trip(date_, mac_address, is_new=True)
+                create_append_image(trip, img, path_dst)
+            else:
+                boat = Boats.objects.get(mac_address=mac_address)
+                trip = create_obj_trip(date_, boat, is_new=False)
+                create_append_image(trip, img, path_dst)
 
         boat = Boats.objects.get(mac_address=mac_address_)
         trip = Trips.objects.get(boat=boat, date=date_)

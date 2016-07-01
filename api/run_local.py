@@ -5,6 +5,7 @@ from api.tasks import (get_temp_list_folder, task_create_json_file, create_trip,
 
 
 def run_folder():
+    print("ejecution")
     temp_list = get_temp_list_folder()
     list_folder = temp_list['folder_list']
     bucket_src = temp_list['bucket_src']
@@ -14,4 +15,5 @@ def run_folder():
     task_move_parent_directory(list_folder, bucket_src)
 
 
-run_folder()
+if __name__ == '__main__':
+    run_folder()
