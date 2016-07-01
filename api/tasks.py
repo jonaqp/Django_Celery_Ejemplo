@@ -52,6 +52,7 @@ def get_temp_list_folder():
             if extension_correct:
                 image_name = k.name.split("/")[-1]
                 picture_format = group(get_validate_format.s(str(image_name))).apply_async()
+                print(picture_format.join())
                 path_dst = "{0}/{1}/{2}".format(str(dst), str(directory), str(image_name))
                 if i not in result_image_dict.keys():
                     result_image_dict[i] = dict(directory='', mac_address='', date='',
@@ -67,7 +68,8 @@ def get_temp_list_folder():
                         longitude=str(picture_format.join()[0]['longitude']),
                         latitude=str(picture_format.join()[0]['latitude']),
                         image_filepath=path_dst,
-                        datetime=str(picture_format.join()[0]['datetime'])
+                        datetime=picture_format.join()[0]['datetime'],
+                        battery_level=str(picture_format.join()[0]['battery_level'])
                     )
                 )
     result = dict(folder_list=result_image_dict, bucket_src=bucket_src)
@@ -124,7 +126,7 @@ def get_validate_format(string_picture):
         latitude = float(file_base[4][3:])
         longitude = float(file_base[5][3:])
         result = dict(datetime=new_datetime, mac_address=mac_address, is_new=False,
-                      latitude=latitude, longitude=longitude, battery='')
+                      latitude=latitude, longitude=longitude, battery_level='')
     if len(file_base) == 5:
         string_val = str(file_base[-1].split('.')[0])
         if string_val not in ('ori0', 'ori1', 'ori2', 'ori3', 'ori4', 'ori5', 'ori6'):
@@ -145,14 +147,14 @@ def get_validate_format(string_picture):
             longitude = convert_degress_to_decimal(metadata_longitude)
             new_datetime = convert_str_in_datetime(string_datetime_now)
             result = dict(datetime=new_datetime, mac_address=mac_address, is_new=True,
-                          latitude=latitude, longitude=longitude, battery=metadata_batterylevel)
+                          latitude=latitude, longitude=longitude, battery_level=metadata_batterylevel)
         else:
             mac_address = file_base[1]
             new_datetime = convert_str_in_datetime(convert_unix_in_datetime(file_base[3]))
             latitude = ''
             longitude = ''
             result = dict(datetime=new_datetime, mac_address=mac_address, is_new=False,
-                          latitude=latitude, longitude=longitude, battery='')
+                          latitude=latitude, longitude=longitude, battery_level='')
     return result
 
 
@@ -161,9 +163,9 @@ def create_append_image(trip_obj, picture_format, path_dst):
     time = str(picture_format['datetime'].time())
     latitude = str(picture_format['latitude'])
     longitude = str(picture_format['longitude'])
-    battery = str(picture_format['battery']) or '0'
+    battery_level = str(picture_format['battery_level']) or '0'
     image_ = Image(image_filepath=path_dst, latitude=latitude, longitude=longitude,
-                   orientation='', battery_level=battery, time=time)
+                   orientation='', battery_level=battery_level, time=time)
     trip_obj.image.append(image_)
     trip_obj.save()
 
@@ -248,7 +250,6 @@ def task_move_parent_directory(list_folder, bucket_src):
             if k.name:
                 image_name = k.name.split("/")[-1]
                 path_dst = "{0}/{1}/{2}".format(str(src), str(directory), str(image_name))
-
                 bucket_src.lookup(k.name)
                 bucket_src.copy_key(path_dst, bucket_src.name, k.name)
                 bucket_src.delete_key(k.name)
@@ -256,14 +257,23 @@ def task_move_parent_directory(list_folder, bucket_src):
 
 @shared_task()
 def run_folder():
+    now = datetime.datetime.now()
+    logger.info("Task Get all folder s3: result = %s" % str(now))
     temp_list = get_temp_list_folder()
     list_folder = temp_list['folder_list']
     bucket_src = temp_list['bucket_src']
-    now = datetime.datetime.now()
-    logger.info("Task Start: result = %s" % str(now))
+    logger.info("Task Finish Get all folder s3: result = %s" % str(now))
+
+    logger.info("Task Create Trip: result = %s" % str(now))
     create_trip(list_folder)
+
+    logger.info("Task Create Json: result = %s" % str(now))
     task_create_json_file(list_folder, bucket_src)
+
+    logger.info("Task Create Csv result = %s" % str(now))
     task_create_file_csv(list_folder, bucket_src)
+
+    logger.info("Task Move parent folder: result = %s" % str(now))
     task_move_parent_directory(list_folder, bucket_src)
-    now = datetime.datetime.now()
+
     logger.info("Task finished: result = %s" % str(now))

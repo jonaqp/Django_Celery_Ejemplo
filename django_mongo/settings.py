@@ -118,14 +118,13 @@ USE_TZ = True
 import djcelery
 djcelery.setup_loader()
 
-BROKER_URL = 'amqp://TXltB7ZR:S6aGB8wchSmeltZhJqRIcbyihntDLijU@scared-strawberry-43.bigwig.lshift.net:10982/dXwsXSuTq6kt'
-# BROKER_URL = "amqp://guest:guest@localhost:5672//"
+# BROKER_URL = 'amqp://TXltB7ZR:**@scared-strawberry-43.bigwig.lshift.net:10982/dXwsXSuTq6kt'
+BROKER_URL = "amqp://guest:guest@localhost:5672//"
 BROKER_TRANSPORT = 'amqp'
 CELERY_RESULT_BACKEND = "amqp"
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-
 
 MONGODB_USER = env('MONGODB_USER')
 MONGODB_PASSWD = env('MONGODB_PASSWD')
