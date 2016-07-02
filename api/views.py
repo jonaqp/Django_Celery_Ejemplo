@@ -1,7 +1,8 @@
-from .models import Boats, Buckets
 from django.views.generic import TemplateView
 from rest_framework_mongoengine.generics import (
     ListAPIView, CreateAPIView)
+
+from .models import Boats, Buckets
 from .serializers import (
     BoatSerializer,
     BoatCreateUpdateSerializer,

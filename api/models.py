@@ -71,4 +71,3 @@ class Trips(Document):
     video_filepath = StringField(max_length=255)
     image = ListField(EmbeddedDocumentField(Image))
     events = EmbeddedDocumentField(Events)
-

@@ -1,4 +1,3 @@
-
 import os
 import environ
 from os.path import basename
@@ -16,17 +15,13 @@ PROJECT_TEMPLATES = [
 env_file = str(DJANGO_ROOT.path('security/environ_prod.env'))
 environ.Env.read_env(str(env_file))
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 SECRET_KEY = env('SECRET_KEY')
-
 
 DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['*']
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -53,7 +48,6 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 ROOT_URLCONF = '%s.urls' % SETTINGS_NAME
 
 TEMPLATES = [
@@ -74,8 +68,8 @@ TEMPLATES = [
             'loaders': [
                 ('django.template.loaders.cached.Loader',
                  (
-                    'django.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
+                     'django.template.loaders.filesystem.Loader',
+                     'django.template.loaders.app_directories.Loader',
                  ))
             ],
         },
@@ -83,8 +77,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = '%s.wsgi.application' % SETTINGS_NAME
-
-
 
 DATABASES = {
     'default': {
@@ -120,8 +112,8 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 import djcelery
+
 djcelery.setup_loader()
 
 # BROKER_URL = 'amqp://TXltB7ZR:**@scared-strawberry-43.bigwig.lshift.net:10982/dXwsXSuTq6kt'
@@ -139,7 +131,6 @@ MONGODB_NAME = env('MONGODB_NAME')
 MONGODB_DATABASE_HOST = \
     'mongodb://%s:%s@%s/%s' \
     % (MONGODB_USER, MONGODB_PASSWD, MONGODB_HOST, MONGODB_NAME)
-
 
 # STATIC_URL = '/static/'
 # MEDIA_URL = '/media/'

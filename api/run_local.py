@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from api.tasks import (get_temp_list_folder, task_create_json_file, create_trip,
                        task_create_file_csv, task_move_parent_directory)
 from api.utils.connection import get_connection_bucket
